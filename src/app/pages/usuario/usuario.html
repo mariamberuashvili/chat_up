@@ -1,0 +1,71 @@
+<div class="profile-page">
+
+  <div class="profile-card">
+
+    <a routerLink="/chat" class="back">← Volver al chat</a>
+
+    <h2>Mi perfil</h2>
+
+    <!-- Foto -->
+    <div class="photo-block">
+      <div class="photo">
+        @if (photoUrl()) {
+          <img [src]="photoUrl()" alt="Foto de perfil" />
+        } @else {
+          <span class="photo-initial">{{ initial() }}</span>
+        }
+      </div>
+      <label class="upload-btn">
+        Cambiar foto
+        <input type="file" accept="image/*" (change)="onPhotoSelected($event)" hidden />
+      </label>
+      @if (photoMsg()) {
+        <span class="msg ok">{{ photoMsg() }}</span>
+      }
+    </div>
+
+    <!-- Gmail (solo lectura) -->
+    <div class="field">
+      <label>Correo (Gmail)</label>
+      <div class="readonly">{{ email }}</div>
+    </div>
+
+    <!-- Nombre -->
+    <div class="field">
+      <label for="name">Nombre</label>
+      <div class="row">
+        <input id="name" type="text" [(ngModel)]="name" />
+        <button class="btn" (click)="saveName()" [disabled]="saving() || !name.trim()">
+          Guardar
+        </button>
+      </div>
+      @if (nameMsg()) {
+        <span class="msg ok">{{ nameMsg() }}</span>
+      }
+    </div>
+
+    <hr />
+
+    <!-- Cambiar contraseña -->
+    <h3>Cambiar contraseña</h3>
+
+    <div class="field">
+      <label for="cur">Contraseña actual</label>
+      <input id="cur" type="password" [(ngModel)]="currentPassword" />
+    </div>
+
+    <div class="field">
+      <label for="new">Nueva contraseña</label>
+      <input id="new" type="password" [(ngModel)]="newPassword" minlength="6" />
+    </div>
+
+    @if (passMsg()) {
+      <p class="msg" [class.ok]="!passError()" [class.err]="passError()">{{ passMsg() }}</p>
+    }
+
+    <button class="btn primary" (click)="changePassword()" [disabled]="saving()">
+      Actualizar contraseña
+    </button>
+
+  </div>
+</div>

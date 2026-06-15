@@ -1,0 +1,278 @@
+<div class="layout">
+
+  <!-- Barra lateral -->
+  <aside class="sidebar">
+
+    <header class="sidebar-header">
+
+      @if (authService.user(); as user) {
+
+        <div class="me-block">
+          <span class="avatar" [style.background]="avatarColor(user.uid)">
+            @if (myPhoto(); as photo) {
+              <img class="avatar-img" [src]="photo" alt="" />
+            } @else {
+              {{ user.displayName?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() }}
+            }
+            <span class="dot online"></span>
+          </span>
+
+          <div class="me">
+            <span class="me-name">{{ user.displayName || user.email }}</span>
+            <a class="profile-link" routerLink="/usuario">Perfil</a>
+          </div>
+        </div>
+
+        <button class="logout-btn" (click)="logout()">Salir</button>
+
+      }
+
+    </header>
+
+    <!-- GRUPOS -->
+    <section class="section">
+
+      <div class="section-head">
+        <h3>Grupos</h3>
+        <button class="add-btn" (click)="showNewGroup.set(!showNewGroup())">＋</button>
+      </div>
+
+      @if (showNewGroup()) {
+        <div class="new-group">
+
+          <input
+            type="text"
+            placeholder="Nombre del grupo"
+            [(ngModel)]="newGroupName"
+          />
+
+          <p class="hint">Selecciona miembros:</p>
+
+          @for (c of contacts(); track c.uid) {
+            <label class="member-row">
+              <input
+                type="checkbox"
+                [checked]="selectedMembers().has(c.uid)"
+                (change)="toggleInSet(selectedMembers, c.uid)"
+              />
+              {{ c.displayName }}
+            </label>
+          }
+
+          <button
+            class="create-btn"
+            (click)="createGroup()"
+            [disabled]="!newGroupName?.trim()"
+          >
+            Crear grupo
+          </button>
+
+        </div>
+      }
+
+      @for (room of groups(); track room.id) {
+        <button
+          class="room-item"
+          [class.active]="selectedRoom()?.id === room.id"
+          (click)="selectRoom(room)"
+        >
+          <span class="avatar group" [style.background]="avatarColor(room.id)">#</span>
+
+          <span class="room-info">
+
+  <span class="room-name">
+    {{ room.name }}
+
+    @if (unread()[room.id] > 0) {
+      <span class="badge">
+        {{ unread()[room.id] }}
+      </span>
+    }
+  </span>
+
+  @if (room.lastMessage) {
+    <span class="room-last">{{ room.lastMessage }}</span>
+  }
+
+</span>
+        </button>
+      } @empty {
+        <p class="empty-list">Sin grupos todavía</p>
+      }
+
+    </section>
+
+    <!-- USUARIOS -->
+    <section class="section">
+
+      <div class="section-head">
+        <h3>Usuarios</h3>
+        <button class="add-btn" (click)="showAddUser.set(!showAddUser())">＋</button>
+      </div>
+
+      @if (showAddUser()) {
+        <div class="new-group">
+          <input
+            type="text"
+            placeholder="Correo del usuario"
+            [(ngModel)]="addUserEmail"
+            (keyup.enter)="addUser()"
+          />
+
+          <button
+            class="create-btn"
+            (click)="addUser()"
+            [disabled]="!addUserEmail?.trim()"
+          >
+            Añadir y chatear
+          </button>
+
+          @if (addUserMsg()) {
+            <p class="hint">{{ addUserMsg() }}</p>
+          }
+        </div>
+      }
+
+      @for (c of contacts(); track c.uid) {
+        <button class="room-item" (click)="openDmWith(c)">
+
+          <span class="avatar" [style.background]="avatarColor(c.uid)">
+            @if (roomService.photoSrc(c.photoUrl); as photo) {
+              <img class="avatar-img" [src]="photo" alt="" />
+            } @else {
+              {{ c.displayName?.charAt(0)?.toUpperCase() }}
+            }
+
+            <span class="dot" [class.online]="c.online"></span>
+          </span>
+
+          <span class="room-info">
+            <span class="room-name">
+              {{ c.displayName }}
+              @if (dmUnread(c.uid) > 0) {
+                <span class="badge">{{ dmUnread(c.uid) }}</span>
+              }
+            </span>
+            <span class="room-last">
+              {{ c.online ? 'Conectado' : 'Desconectado' }}
+            </span>
+          </span>
+
+        </button>
+      } @empty {
+        <p class="empty-list">No hay otros usuarios</p>
+      }
+
+    </section>
+
+  </aside>
+
+  <!-- CHAT -->
+  <main class="chat-main">
+
+    @if (selectedRoom(); as room) {
+
+      <header class="chat-header">
+        <div class="chat-peer">
+          <span class="avatar" [style.background]="avatarColor(room.id)">
+            @if (roomPhoto(room); as photo) {
+              <img class="avatar-img" [src]="photo" alt="" />
+            } @else {
+              {{ room.type === 'group' ? '#' : roomTitle(room).charAt(0).toUpperCase() }}
+            }
+          </span>
+          <h2>{{ roomTitle(room) }}</h2>
+          @if (room.type === 'group') {
+            <span class="member-count">{{ room.members.length }} miembros</span>
+          }
+        </div>
+        <div class="chat-header-actions">
+          @if (room.type === 'group') {
+            <button class="group-action" (click)="showAddMembers.set(!showAddMembers())">
+              ＋ Añadir gente
+            </button>
+            <button class="group-action leave" (click)="leaveGroup()">
+              Salir del grupo
+            </button>
+          }
+
+          <button class="group-action leave" (click)="deleteCurrentChat()">
+            Eliminar chat
+          </button>
+
+          <span class="status" [class]="chatService.status()">
+            {{ chatService.status() }}
+          </span>
+        </div>
+      </header>
+
+      @if (room.type === 'group' && showAddMembers()) {
+        <div class="add-members-panel">
+          <p class="hint">Añade gente al grupo:</p>
+
+          @for (c of nonMembers(); track c.uid) {
+            <label class="member-row">
+              <input
+                type="checkbox"
+                [checked]="addMembersSelected().has(c.uid)"
+                (change)="toggleInSet(addMembersSelected, c.uid)"
+              />
+              {{ c.displayName }}
+            </label>
+          } @empty {
+            <p class="hint">No hay más usuarios para añadir.</p>
+          }
+
+          <button
+            class="create-btn"
+            (click)="addMembersToGroup()"
+            [disabled]="addMembersSelected().size === 0"
+          >
+            Añadir al grupo
+          </button>
+        </div>
+      }
+
+      <div class="messages">
+
+        @for (msg of messages(); track msg.cid) {
+          <div class="message" [class.mine]="msg.senderUid === authService.user()?.uid">
+
+            <span class="msg-sender">{{ msg.senderName }}</span>
+            <span class="msg-text">{{ msg.text }}</span>
+
+            @if (msg.senderUid === authService.user()?.uid) {
+              <button class="msg-del" (click)="deleteMessage(msg)" title="Eliminar mensaje">
+                Eliminar
+              </button>
+            }
+
+          </div>
+        } @empty {
+          <div class="empty">Aún no hay mensajes. ¡Escribe el primero!</div>
+        }
+
+      </div>
+
+      <div class="input-container">
+        <input
+          type="text"
+          [(ngModel)]="message"
+          (keyup.enter)="sendMessage()"
+          placeholder="Escribe un mensaje"
+        />
+
+        <button (click)="sendMessage()">Enviar</button>
+      </div>
+
+    } @else {
+
+      <div class="placeholder">
+        <p>Selecciona un usuario o grupo para empezar a chatear</p>
+      </div>
+
+    }
+
+  </main>
+
+</div>

@@ -1,0 +1,482 @@
+:host {
+  display: block;
+  height: 100vh;
+  padding: 16px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+  height: 100%;
+  max-width: 1150px;
+  margin: 0 auto;
+}
+
+/* ---------- Sidebar ---------- */
+
+.sidebar {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  border-radius: 22px;
+  box-shadow: 0 20px 50px rgba(58, 12, 163, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 18px;
+  color: #fff;
+  background: var(--grad);
+}
+
+.me-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.me {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.me-name {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-link {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.profile-link:hover {
+  color: #fff;
+}
+
+/* Imagen de foto de perfil dentro de cualquier avatar. */
+.avatar-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.logout-btn {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.section {
+  padding: 14px;
+  overflow-y: auto;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.section-head h3 {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  color: var(--violet);
+}
+
+.add-btn {
+  background: var(--grad);
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(247, 37, 133, 0.4);
+}
+
+.add-btn:hover {
+  filter: brightness(1.1);
+}
+
+/* Crear grupo */
+.new-group {
+  background: #faf5ff;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.new-group input[type='text'] {
+  width: 100%;
+  padding: 9px 12px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  outline: none;
+}
+
+.new-group input[type='text']:focus {
+  border-color: var(--magenta);
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 10px 0 6px;
+  font-weight: 600;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.member-row input[type='checkbox'] {
+  accent-color: var(--magenta);
+  width: 16px;
+  height: 16px;
+}
+
+.create-btn {
+  width: 100%;
+  background: var(--grad);
+  color: #fff;
+  padding: 11px;
+  margin-top: 12px;
+  box-shadow: 0 6px 16px rgba(247, 37, 133, 0.35);
+}
+
+.create-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+/* Items de room / contacto */
+.room-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: transparent;
+  padding: 9px;
+  border-radius: 14px;
+  text-align: left;
+}
+
+.room-item:hover {
+  background: #faf0fb;
+}
+
+.room-item.active {
+  background: #fde7f4;
+}
+
+.avatar {
+  position: relative;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--violet);
+  color: #fff;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.room-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.room-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.room-last {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Punto de presencia */
+.dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #c0c0cc;
+}
+
+.avatar .dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  border: 2px solid #fff;
+}
+
+.dot.online {
+  background: var(--green);
+}
+
+.empty-list {
+  font-size: 0.82rem;
+  color: var(--muted);
+  padding: 4px 8px;
+}
+
+/* ---------- Chat principal ---------- */
+
+.chat-main {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  border-radius: 22px;
+  box-shadow: 0 20px 50px rgba(58, 12, 163, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  color: #fff;
+  background: var(--grad-soft);
+}
+
+.chat-peer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.chat-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.member-count {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  margin-left: 4px;
+}
+
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.group-action {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 999px;
+}
+
+.group-action:hover {
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.group-action.leave {
+  background: rgba(239, 71, 111, 0.85);
+}
+
+.group-action.leave:hover {
+  background: rgba(239, 71, 111, 1);
+}
+
+.add-members-panel {
+  padding: 14px 22px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.status {
+  text-transform: capitalize;
+  font-weight: 700;
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.25);
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.messages {
+  flex: 1;
+  padding: 18px 22px;
+  overflow-y: auto;
+  background: #faf7ff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 9px 14px;
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+  width: fit-content;
+  max-width: 70%;
+  box-shadow: 0 2px 6px rgba(58, 12, 163, 0.06);
+}
+
+.message.mine {
+  align-self: flex-end;
+  background: var(--grad);
+  border: none;
+  color: #fff;
+  border-radius: 16px;
+  border-bottom-right-radius: 4px;
+}
+
+.msg-sender {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--magenta);
+  margin-bottom: 2px;
+}
+
+.message.mine .msg-sender {
+  display: none;
+}
+
+.msg-text {
+  word-break: break-word;
+}
+
+/* Botón de eliminar mensaje (estilo WhatsApp: aparece al pasar el ratón). */
+.msg-del {
+  align-self: flex-end;
+  margin-top: 4px;
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.message:hover .msg-del {
+  opacity: 1;
+}
+
+.msg-del:hover {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.empty {
+  color: var(--muted);
+  text-align: center;
+  margin: auto;
+}
+
+.input-container {
+  display: flex;
+  gap: 10px;
+  padding: 16px 22px;
+  border-top: 1px solid var(--border);
+}
+
+.input-container input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-container input:focus {
+  border-color: var(--magenta);
+  box-shadow: 0 0 0 4px rgba(247, 37, 133, 0.15);
+}
+
+.input-container button {
+  background: var(--grad);
+  color: #fff;
+  padding: 12px 26px;
+  box-shadow: 0 6px 16px rgba(247, 37, 133, 0.35);
+}
+
+.input-container button:hover {
+  filter: brightness(1.08);
+}
+
+.placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  padding: 20px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: #25d366;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 6px;
+  vertical-align: middle;
+}
