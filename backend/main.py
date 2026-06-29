@@ -1,14 +1,3 @@
-"""Punto de entrada del backend del chat.
-
-Crea la app FastAPI, configura CORS, sirve las fotos subidas y monta los
-routers. Toda la lógica vive en `models`, `services` y `routers`.
-
-Auth la gestiona Firebase en el frontend; aquí confiamos en el uid que llega.
-
-Arrancar:
-    pip install -r requirements.txt
-    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-"""
 
 import os
 
