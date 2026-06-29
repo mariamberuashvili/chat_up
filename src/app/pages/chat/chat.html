@@ -188,11 +188,9 @@
               @if (room.type === 'group') {
                 <button class="group-action" (click)="showAddMembers.set(!showAddMembers())">＋ Añadir gente</button>
                 <button class="group-action leave" (click)="leaveGroup()">Salir</button>
-                @if (!aiEnabled()) {
-                  <button class="group-action ai-btn" (click)="toggleRoomAI()">✦ Añadir IA</button>
-                } @else {
-                  <span class="ai-active-badge">✦ IA activa</span>
-                }
+                <button class="group-action ai-btn" [class.ai-on]="aiEnabled()" (click)="toggleRoomAI()">
+                  {{ aiEnabled() ? '✦ IA activa' : '✦ Añadir IA' }}
+                </button>
               }
               @if (room.type === 'dm' && !room.id.startsWith('ai__')) {
                 <button class="group-action ai-btn" [class.ai-on]="aiEnabled()" (click)="toggleRoomAI()">
@@ -215,11 +213,9 @@
                   @if (room.type === 'group') {
                     <button class="menu-item" (click)="showAddMembers.set(!showAddMembers())">＋ Añadir gente</button>
                     <button class="menu-item leave" (click)="leaveGroup()">Salir del grupo</button>
-                    @if (!aiEnabled()) {
-                      <button class="menu-item ai" (click)="toggleRoomAI()">✦ Añadir IA</button>
-                    } @else {
-                      <span class="menu-item ai-on">✦ IA activa</span>
-                    }
+                    <button class="menu-item ai" [class.ai-on]="aiEnabled()" (click)="toggleRoomAI()">
+                      {{ aiEnabled() ? '✦ IA activa' : '✦ Añadir IA' }}
+                    </button>
                   }
                   @if (room.type === 'dm' && !room.id.startsWith('ai__')) {
                     <button class="menu-item ai" [class.ai-on]="aiEnabled()" (click)="toggleRoomAI()">
