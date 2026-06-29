@@ -1,15 +1,15 @@
 :host {
   display: block;
   height: 100vh;
-  padding: 16px;
+  padding: 24px;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 16px;
+  grid-template-columns: 340px 1fr;
+  gap: 22px;
   height: 100%;
-  max-width: 1150px;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
@@ -90,8 +90,91 @@
 }
 
 .section {
-  padding: 14px;
+  padding: 10px 16px 16px;
   overflow-y: auto;
+}
+
+.section-ai {
+  overflow-y: visible;
+  flex-shrink: 0;
+}
+
+/* ── Versión móvil ───────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  :host { padding: 0; }
+
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    height: 100dvh;
+    gap: 0;
+    max-width: 100%;
+  }
+
+  /* Sidebar ocupa toda la pantalla; el sidebar MISMO hace scroll */
+  .sidebar {
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    overflow-y: auto;   /* ← el sidebar scrollea, no las secciones */
+    overflow-x: hidden;
+  }
+
+  /* Cada sección no tiene scroll propio en móvil */
+  .section {
+    overflow-y: visible;
+    flex-shrink: 0;     /* no se comprime, crece lo que necesite */
+  }
+
+  /* El chat principal ocupa toda la pantalla */
+  .chat-main {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Sala abierta: solo chat visible */
+  .layout.room-open .sidebar  { display: none; }
+  .layout.room-open .chat-main { display: flex; }
+
+  /* Sin sala: solo sidebar visible */
+  .layout:not(.room-open) .chat-main { display: none; }
+  .layout:not(.room-open) .sidebar   { display: flex; }
+
+  /* Botón volver (solo móvil) */
+  .back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.22);
+    color: #fff;
+    font-size: 1.2rem;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .back-btn:hover { background: rgba(255,255,255,0.35); }
+
+  /* back-btn y mobile-menu-wrap los controla Angular con @if(isMobile()) */
+  .back-btn { display: flex; }
+
+  /* Header: back-btn | nombre (flex:1) | ⋮ */
+  .chat-header { padding: 12px 14px; gap: 8px; }
+  .chat-peer   { flex: 1; min-width: 0; overflow: hidden; }
+  .chat-peer h2 { font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .messages { padding: 12px 14px; }
+
+  .message { max-width: 88%; }
+
+  .input-container { padding: 10px 14px; }
+
+  .input-container button { padding: 10px 18px; }
 }
 
 .section-head {
@@ -191,7 +274,7 @@
   gap: 12px;
   width: 100%;
   background: transparent;
-  padding: 9px;
+  padding: 10px 12px;
   border-radius: 14px;
   text-align: left;
 }
@@ -207,8 +290,8 @@
 .avatar {
   position: relative;
   flex-shrink: 0;
-  width: 42px;
-  height: 42px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: var(--violet);
   color: #fff;
@@ -227,7 +310,7 @@
 
 .room-name {
   font-weight: 700;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -332,6 +415,175 @@
   background: rgba(239, 71, 111, 1);
 }
 
+/* ── Sidebar colapsable ─────────────────────────────────────────── */
+
+.section-ai {
+  border-bottom: 1px solid #f0eaff;
+  padding-bottom: 4px;
+}
+
+.ai-entry {
+  margin: 4px 8px;
+  border-radius: 14px;
+}
+
+.ai-avatar {
+  background: #7209b7 !important;
+  font-size: 1rem;
+}
+
+.section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #3a0ca3;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  user-select: none;
+}
+
+.section-toggle:hover {
+  background: rgba(114, 9, 183, 0.06);
+}
+
+.section-toggle-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  text-align: left;
+}
+
+.section-count {
+  background: #7209b7;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+.section-arrow {
+  font-size: 1.1rem;
+  color: #7209b7;
+  transition: transform 0.2s;
+  display: inline-block;
+  line-height: 1;
+}
+
+.section-arrow.open {
+  transform: rotate(90deg);
+}
+
+/* Estilos base del menú wrap (visibilidad la controla Angular con @if) */
+.mobile-menu-wrap { position: relative; display: flex; align-items: center; gap: 6px; }
+
+.mobile-menu-btn {
+  background: rgba(255,255,255,0.22);
+  color: #fff;
+  font-size: 1.4rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mobile-menu-btn:hover { background: rgba(255,255,255,0.35); }
+
+.mobile-status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  text-transform: capitalize;
+}
+
+.mobile-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(58,12,163,0.18);
+  padding: 8px;
+  min-width: 190px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #3a0ca3;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.menu-item:hover { background: #f0eaff; }
+
+.menu-item.leave { color: #ef476f; }
+.menu-item.leave:hover { background: #fff0f3; }
+
+.menu-item.ai { color: #7209b7; }
+.menu-item.ai:hover { background: #f5eeff; }
+
+.menu-item.ai-on {
+  color: #06d6a0;
+  font-weight: 700;
+  padding: 10px 14px;
+  display: block;
+}
+
+/* ── Botones IA ──────────────────────────────────────────────────── */
+
+.group-action.ai-btn {
+  background: rgba(114, 9, 183, 0.75);
+}
+
+.group-action.ai-btn:hover {
+  background: rgba(114, 9, 183, 1);
+}
+
+.group-action.ai-btn.ai-on {
+  background: rgba(6, 214, 160, 0.85);
+}
+
+.group-action.ai-btn.ai-on:hover {
+  background: rgba(6, 214, 160, 1);
+}
+
+.ai-active-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(114, 9, 183, 0.55);
+  padding: 7px 12px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
 .add-members-panel {
   padding: 14px 22px;
   background: #fff;
@@ -349,12 +601,12 @@
 
 .messages {
   flex: 1;
-  padding: 18px 22px;
+  padding: 24px 28px;
   overflow-y: auto;
   background: #faf7ff;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .message {
@@ -424,8 +676,8 @@
 
 .input-container {
   display: flex;
-  gap: 10px;
-  padding: 16px 22px;
+  gap: 12px;
+  padding: 18px 28px;
   border-top: 1px solid var(--border);
 }
 

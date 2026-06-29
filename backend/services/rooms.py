@@ -4,11 +4,14 @@ import uuid
 
 from db import query
 
+AI_BOT_UID = "ai-bot"
+
 
 def list_for_user(uid: str) -> list[dict]:
     """Salas a las que pertenece el usuario, con sus miembros y último mensaje."""
     rows = query(
         """SELECT r.id, r.type, r.name,
+                  r.ai_enabled  AS aiEnabled,
                   r.last_message AS lastMessage,
                   r.last_message_at AS lastMessageAt,
                   GROUP_CONCAT(rm2.user_uid) AS members
@@ -21,7 +24,8 @@ def list_for_user(uid: str) -> list[dict]:
         fetch=True,
     )
     for r in rows:
-        r["members"] = r["members"].split(",") if r["members"] else []
+        r["members"]   = r["members"].split(",") if r["members"] else []
+        r["aiEnabled"] = bool(r.get("aiEnabled"))
     return rows
 
 
@@ -34,7 +38,7 @@ def open_dm(me_uid: str, other_uid: str) -> dict:
            VALUES (%(id)s, %(a)s), (%(id)s, %(b)s)""",
         {"id": rid, "a": me_uid, "b": other_uid},
     )
-    return {"id": rid, "type": "dm", "name": "", "members": [me_uid, other_uid]}
+    return {"id": rid, "type": "dm", "name": "", "members": [me_uid, other_uid], "aiEnabled": False}
 
 
 def create_group(name: str, members: list[str]) -> dict:
@@ -49,7 +53,7 @@ def create_group(name: str, members: list[str]) -> dict:
             "INSERT IGNORE INTO room_members (room_id, user_uid) VALUES (%(id)s, %(uid)s)",
             {"id": rid, "uid": uid},
         )
-    return {"id": rid, "type": "group", "name": name, "members": members}
+    return {"id": rid, "type": "group", "name": name, "members": members, "aiEnabled": False}
 
 
 def add_members(room_id: str, members: list[str]) -> dict:
@@ -86,3 +90,46 @@ def member_uids(room_id: str) -> list[str]:
         fetch=True,
     )
     return [r["user_uid"] for r in rows]
+
+
+# ── IA ──────────────────────────────────────────────────────────────────────
+
+
+def is_ai_enabled(room_id: str) -> bool:
+    rows = query(
+        "SELECT ai_enabled FROM rooms WHERE id = %(rid)s",
+        {"rid": room_id},
+        fetch=True,
+    )
+    return bool(rows and rows[0]["ai_enabled"])
+
+
+def toggle_ai(room_id: str) -> bool:
+    """Activa o desactiva la IA en la sala y devuelve el nuevo estado."""
+    enabled = not is_ai_enabled(room_id)
+    query(
+        "UPDATE rooms SET ai_enabled = %(v)s WHERE id = %(rid)s",
+        {"v": int(enabled), "rid": room_id},
+    )
+    return enabled
+
+
+def create_ai_room(user_uid: str) -> dict:
+    """Crea (o reutiliza) el chat privado del usuario con la IA."""
+    rid = f"ai__{user_uid}"
+    query(
+        "INSERT IGNORE INTO rooms (id, type, name, ai_enabled) VALUES (%(id)s, 'dm', 'Inteligente IA', 1)",
+        {"id": rid},
+    )
+    query(
+        """INSERT IGNORE INTO room_members (room_id, user_uid)
+           VALUES (%(id)s, %(uid)s), (%(id)s, %(bot)s)""",
+        {"id": rid, "uid": user_uid, "bot": AI_BOT_UID},
+    )
+    return {
+        "id": rid,
+        "type": "dm",
+        "name": "Inteligente IA",
+        "members": member_uids(rid),
+        "aiEnabled": True,
+    }

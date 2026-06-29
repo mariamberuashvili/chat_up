@@ -1,7 +1,19 @@
 """Configuración de la aplicación (constantes y ajustes leídos del entorno)."""
 
-# Carpeta donde se guardan las fotos de perfil, servida en /uploads/<archivo>.
+import os
+from dotenv import load_dotenv
+
+# Cargar variables del archivo .env
+load_dotenv()
+
+# Carpeta donde se guardan archivos subidos (ej. fotos de perfil)
 UPLOAD_DIR = "uploads"
 
-# Orígenes permitidos para CORS. El frontend Angular corre en otro puerto.
+# CORS (en producción deberías restringirlo, no usar "*")
 CORS_ORIGINS = ["*"]
+
+# Clave de API de Groq
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+if not GROQ_API_KEY:
+    raise ValueError("❌ GROQ_API_KEY no está configurada en el archivo .env")

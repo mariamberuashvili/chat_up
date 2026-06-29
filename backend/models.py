@@ -41,6 +41,11 @@ class DeleteRoomReq(BaseModel):
     roomId: str
 
 
+class AiRoomReq(BaseModel):
+    """Petición para abrir el chat personal con la IA."""
+    uid: str
+
+
 # ----------------------------- Respuestas --------------------------
 
 class UserOut(BaseModel):

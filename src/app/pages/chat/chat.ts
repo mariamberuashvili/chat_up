@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, WritableSignal, computed, signal } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, WritableSignal, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -13,7 +13,10 @@ import { RoomService, AppUser, Room, ChatMessage } from '../../services/room.ser
   templateUrl: './chat.html',
   styleUrl: './chat.css',
 })
-export class Chat implements OnInit, OnDestroy {
+export class Chat implements OnInit, OnDestroy, AfterViewChecked {
+
+  @ViewChild('messagesContainer') private messagesContainer!: ElementRef<HTMLDivElement>;
+  private shouldScrollToBottom = false;
 
   message = '';
 
@@ -34,6 +37,15 @@ export class Chat implements OnInit, OnDestroy {
   addUserEmail = '';
   addUserMsg   = signal<string | null>(null);
 
+  aiEnabled       = signal(false);
+  showGroups      = signal(false);
+  showContacts    = signal(false);
+  showMobileMenu  = signal(false);
+  isMobile        = signal(window.innerWidth <= 768);
+
+  @HostListener('window:resize')
+  onResize() { this.isMobile.set(window.innerWidth <= 768); }
+
   private pollTimer?: ReturnType<typeof setInterval>;
   private seenCids = new Set<string>();
   private palette  = ['#f72585','#7209b7','#3a0ca3','#4361ee','#4cc9f0','#06d6a0','#ff9e00','#ef476f'];
@@ -44,6 +56,16 @@ export class Chat implements OnInit, OnDestroy {
     protected roomService: RoomService,
     private   router: Router,
   ) {}
+
+  ngAfterViewChecked() {
+    if (this.shouldScrollToBottom) {
+      this.shouldScrollToBottom = false;
+      try {
+        const el = this.messagesContainer?.nativeElement;
+        if (el) el.scrollTop = el.scrollHeight;
+      } catch {}
+    }
+  }
 
   ngOnInit() {
     const uid = this.authService.user()?.uid;
@@ -116,6 +138,7 @@ export class Chat implements OnInit, OnDestroy {
     // Mensaje normal en la sala activa
     this.messages.update(list => [...list, msg]);
     this.unread.update(u => ({ ...u, [msg.roomId]: 0 }));
+    this.shouldScrollToBottom = true;
 
     // Notificar si la pestaña no tiene foco
     if (!document.hasFocus()) {
@@ -136,12 +159,14 @@ export class Chat implements OnInit, OnDestroy {
 
   async selectRoom(room: Room) {
     this.selectedRoom.set(room);
+    this.aiEnabled.set(room.aiEnabled ?? false);
     this.seenCids.clear();
     this.unread.update(u => ({ ...u, [room.id]: 0 }));
 
     const history = await this.roomService.loadMessages(room.id);
     history.forEach(m => this.seenCids.add(m.cid));
     this.messages.set(history);
+    this.shouldScrollToBottom = true;
   }
 
   async deleteCurrentChat() {
@@ -178,6 +203,7 @@ export class Chat implements OnInit, OnDestroy {
     this.seenCids.add(msg.cid);
     this.messages.update(list => [...list, msg]);
     this.message = '';
+    this.shouldScrollToBottom = true;
     this.chatService.send(msg);
   }
 
@@ -228,6 +254,38 @@ export class Chat implements OnInit, OnDestroy {
     this.selectedRoom.set(null);
     this.messages.set([]);
     await this.refresh();
+  }
+
+  // ─── IA ───────────────────────────────────────────────────────────────────
+
+  async openAiChat() {
+    const me = this.currentUser();
+    if (!me) return;
+
+    const existingAiRoom = this.myRooms().find(r => r.id === `ai__${me.uid}`);
+    if (existingAiRoom) {
+      await this.selectRoom(existingAiRoom);
+      return;
+    }
+
+    const room = await this.roomService.openAiChat(me.uid);
+    this.myRooms.update(list => [...list, room]);
+    await this.selectRoom(room);
+  }
+
+  async toggleRoomAI() {
+    const room = this.selectedRoom();
+    if (!room) return;
+    try {
+      const res = await this.roomService.toggleRoomAI(room.id);
+      this.aiEnabled.set(res.aiEnabled);
+      this.selectedRoom.set({ ...room, aiEnabled: res.aiEnabled });
+      this.myRooms.update(list =>
+        list.map(r => r.id === room.id ? { ...r, aiEnabled: res.aiEnabled } : r)
+      );
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   // ─── Usuarios / DM ────────────────────────────────────────────────────────
@@ -314,12 +372,17 @@ export class Chat implements OnInit, OnDestroy {
   // ─── Computados ───────────────────────────────────────────────────────────
 
   contacts = computed(() =>
-    this.users().filter(u => u.uid !== this.authService.user()?.uid)
+    this.users().filter(u => u.uid !== this.authService.user()?.uid && u.uid !== 'ai-bot')
   );
 
   groups = computed(() =>
     this.myRooms().filter(r => r.type === 'group')
   );
+
+  aiRoom = computed(() => {
+    const me = this.authService.user()?.uid;
+    return me ? this.myRooms().find(r => r.id === `ai__${me}`) ?? null : null;
+  });
 
   myPhoto = computed(() => {
     const me = this.users().find(u => u.uid === this.authService.user()?.uid);

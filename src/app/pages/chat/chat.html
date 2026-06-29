@@ -1,4 +1,4 @@
-<div class="layout">
+<div class="layout" [class.room-open]="selectedRoom()">
 
   <!-- Barra lateral -->
   <aside class="sidebar">
@@ -29,75 +29,76 @@
 
     </header>
 
+    <!-- ASISTENTE IA -->
+    <section class="section section-ai">
+      <button
+        class="room-item ai-entry"
+        [class.active]="selectedRoom()?.id === aiRoom()?.id"
+        (click)="openAiChat()"
+      >
+        <span class="avatar group ai-avatar">✦</span>
+        <span class="room-info">
+          <span class="room-name">
+            Inteligente IA
+            @if (aiRoom(); as ar) {
+              @if (unread()[ar.id] > 0) {
+                <span class="badge">{{ unread()[ar.id] }}</span>
+              }
+            }
+          </span>
+          <span class="room-last">Asistente de IA</span>
+        </span>
+      </button>
+    </section>
+
     <!-- GRUPOS -->
     <section class="section">
 
-      <div class="section-head">
-        <h3>Grupos</h3>
-        <button class="add-btn" (click)="showNewGroup.set(!showNewGroup())">＋</button>
-      </div>
-
-      @if (showNewGroup()) {
-        <div class="new-group">
-
-          <input
-            type="text"
-            placeholder="Nombre del grupo"
-            [(ngModel)]="newGroupName"
-          />
-
-          <p class="hint">Selecciona miembros:</p>
-
-          @for (c of contacts(); track c.uid) {
-            <label class="member-row">
-              <input
-                type="checkbox"
-                [checked]="selectedMembers().has(c.uid)"
-                (change)="toggleInSet(selectedMembers, c.uid)"
-              />
-              {{ c.displayName }}
-            </label>
+      <button class="section-toggle" (click)="showGroups.set(!showGroups())">
+        <span class="section-toggle-title">
+          Grupos
+          @if (!showGroups()) {
+            @let total = groups().length;
+            @if (total > 0) { <span class="section-count">{{ total }}</span> }
           }
+        </span>
+        <span class="section-arrow" [class.open]="showGroups()">›</span>
+        @if (showGroups()) {
+          <button class="add-btn" (click)="$event.stopPropagation(); showNewGroup.set(!showNewGroup())">＋</button>
+        }
+      </button>
 
-          <button
-            class="create-btn"
-            (click)="createGroup()"
-            [disabled]="!newGroupName?.trim()"
-          >
-            Crear grupo
+      @if (showGroups()) {
+
+        @if (showNewGroup()) {
+          <div class="new-group">
+            <input type="text" placeholder="Nombre del grupo" [(ngModel)]="newGroupName" />
+            <p class="hint">Selecciona miembros:</p>
+            @for (c of contacts(); track c.uid) {
+              <label class="member-row">
+                <input type="checkbox" [checked]="selectedMembers().has(c.uid)" (change)="toggleInSet(selectedMembers, c.uid)" />
+                {{ c.displayName }}
+              </label>
+            }
+            <button class="create-btn" (click)="createGroup()" [disabled]="!newGroupName?.trim()">Crear grupo</button>
+          </div>
+        }
+
+        @for (room of groups(); track room.id) {
+          <button class="room-item" [class.active]="selectedRoom()?.id === room.id" (click)="selectRoom(room)">
+            <span class="avatar group" [style.background]="avatarColor(room.id)">#</span>
+            <span class="room-info">
+              <span class="room-name">
+                {{ room.name }}
+                @if (unread()[room.id] > 0) { <span class="badge">{{ unread()[room.id] }}</span> }
+              </span>
+              @if (room.lastMessage) { <span class="room-last">{{ room.lastMessage }}</span> }
+            </span>
           </button>
+        } @empty {
+          <p class="empty-list">Sin grupos todavía</p>
+        }
 
-        </div>
-      }
-
-      @for (room of groups(); track room.id) {
-        <button
-          class="room-item"
-          [class.active]="selectedRoom()?.id === room.id"
-          (click)="selectRoom(room)"
-        >
-          <span class="avatar group" [style.background]="avatarColor(room.id)">#</span>
-
-          <span class="room-info">
-
-  <span class="room-name">
-    {{ room.name }}
-
-    @if (unread()[room.id] > 0) {
-      <span class="badge">
-        {{ unread()[room.id] }}
-      </span>
-    }
-  </span>
-
-  @if (room.lastMessage) {
-    <span class="room-last">{{ room.lastMessage }}</span>
-  }
-
-</span>
-        </button>
-      } @empty {
-        <p class="empty-list">Sin grupos todavía</p>
       }
 
     </section>
@@ -105,62 +106,52 @@
     <!-- USUARIOS -->
     <section class="section">
 
-      <div class="section-head">
-        <h3>Usuarios</h3>
-        <button class="add-btn" (click)="showAddUser.set(!showAddUser())">＋</button>
-      </div>
-
-      @if (showAddUser()) {
-        <div class="new-group">
-          <input
-            type="text"
-            placeholder="Correo del usuario"
-            [(ngModel)]="addUserEmail"
-            (keyup.enter)="addUser()"
-          />
-
-          <button
-            class="create-btn"
-            (click)="addUser()"
-            [disabled]="!addUserEmail?.trim()"
-          >
-            Añadir y chatear
-          </button>
-
-          @if (addUserMsg()) {
-            <p class="hint">{{ addUserMsg() }}</p>
+      <button class="section-toggle" (click)="showContacts.set(!showContacts())">
+        <span class="section-toggle-title">
+          Usuarios
+          @if (!showContacts()) {
+            @let total = contacts().length;
+            @if (total > 0) { <span class="section-count">{{ total }}</span> }
           }
-        </div>
-      }
+        </span>
+        <span class="section-arrow" [class.open]="showContacts()">›</span>
+        @if (showContacts()) {
+          <button class="add-btn" (click)="$event.stopPropagation(); showAddUser.set(!showAddUser())">＋</button>
+        }
+      </button>
 
-      @for (c of contacts(); track c.uid) {
-        <button class="room-item" (click)="openDmWith(c)">
+      @if (showContacts()) {
 
-          <span class="avatar" [style.background]="avatarColor(c.uid)">
-            @if (roomService.photoSrc(c.photoUrl); as photo) {
-              <img class="avatar-img" [src]="photo" alt="" />
-            } @else {
-              {{ c.displayName?.charAt(0)?.toUpperCase() }}
-            }
+        @if (showAddUser()) {
+          <div class="new-group">
+            <input type="text" placeholder="Correo del usuario" [(ngModel)]="addUserEmail" (keyup.enter)="addUser()" />
+            <button class="create-btn" (click)="addUser()" [disabled]="!addUserEmail?.trim()">Añadir y chatear</button>
+            @if (addUserMsg()) { <p class="hint">{{ addUserMsg() }}</p> }
+          </div>
+        }
 
-            <span class="dot" [class.online]="c.online"></span>
-          </span>
-
-          <span class="room-info">
-            <span class="room-name">
-              {{ c.displayName }}
-              @if (dmUnread(c.uid) > 0) {
-                <span class="badge">{{ dmUnread(c.uid) }}</span>
+        @for (c of contacts(); track c.uid) {
+          <button class="room-item" (click)="openDmWith(c)">
+            <span class="avatar" [style.background]="avatarColor(c.uid)">
+              @if (roomService.photoSrc(c.photoUrl); as photo) {
+                <img class="avatar-img" [src]="photo" alt="" />
+              } @else {
+                {{ c.displayName?.charAt(0)?.toUpperCase() }}
               }
+              <span class="dot" [class.online]="c.online"></span>
             </span>
-            <span class="room-last">
-              {{ c.online ? 'Conectado' : 'Desconectado' }}
+            <span class="room-info">
+              <span class="room-name">
+                {{ c.displayName }}
+                @if (dmUnread(c.uid) > 0) { <span class="badge">{{ dmUnread(c.uid) }}</span> }
+              </span>
+              <span class="room-last">{{ c.online ? 'Conectado' : 'Desconectado' }}</span>
             </span>
-          </span>
+          </button>
+        } @empty {
+          <p class="empty-list">No hay otros usuarios</p>
+        }
 
-        </button>
-      } @empty {
-        <p class="empty-list">No hay otros usuarios</p>
       }
 
     </section>
@@ -173,6 +164,9 @@
     @if (selectedRoom(); as room) {
 
       <header class="chat-header">
+        @if (isMobile()) {
+          <button class="back-btn" (click)="selectedRoom.set(null)" title="Volver">‹</button>
+        }
         <div class="chat-peer">
           <span class="avatar" [style.background]="avatarColor(room.id)">
             @if (roomPhoto(room); as photo) {
@@ -187,22 +181,60 @@
           }
         </div>
         <div class="chat-header-actions">
-          @if (room.type === 'group') {
-            <button class="group-action" (click)="showAddMembers.set(!showAddMembers())">
-              ＋ Añadir gente
-            </button>
-            <button class="group-action leave" (click)="leaveGroup()">
-              Salir del grupo
-            </button>
+
+          @if (!isMobile()) {
+            <!-- Escritorio: botones en línea -->
+            <div class="desktop-actions">
+              @if (room.type === 'group') {
+                <button class="group-action" (click)="showAddMembers.set(!showAddMembers())">＋ Añadir gente</button>
+                <button class="group-action leave" (click)="leaveGroup()">Salir</button>
+                @if (!aiEnabled()) {
+                  <button class="group-action ai-btn" (click)="toggleRoomAI()">✦ Añadir IA</button>
+                } @else {
+                  <span class="ai-active-badge">✦ IA activa</span>
+                }
+              }
+              @if (room.type === 'dm' && !room.id.startsWith('ai__')) {
+                <button class="group-action ai-btn" [class.ai-on]="aiEnabled()" (click)="toggleRoomAI()">
+                  {{ aiEnabled() ? '✦ Desactivar IA' : '✦ Activar IA' }}
+                </button>
+              }
+              @if (room.id.startsWith('ai__')) {
+                <span class="ai-active-badge">✦ Inteligente IA</span>
+              }
+              <button class="group-action leave" (click)="deleteCurrentChat()">Eliminar chat</button>
+              <span class="status" [class]="chatService.status()">{{ chatService.status() }}</span>
+            </div>
+          } @else {
+            <!-- Móvil: menú ⋮ -->
+            <div class="mobile-menu-wrap">
+              <span class="status mobile-status" [class]="chatService.status()">{{ chatService.status() }}</span>
+              <button class="mobile-menu-btn" (click)="showMobileMenu.set(!showMobileMenu())">⋮</button>
+              @if (showMobileMenu()) {
+                <div class="mobile-menu-panel" (click)="showMobileMenu.set(false)">
+                  @if (room.type === 'group') {
+                    <button class="menu-item" (click)="showAddMembers.set(!showAddMembers())">＋ Añadir gente</button>
+                    <button class="menu-item leave" (click)="leaveGroup()">Salir del grupo</button>
+                    @if (!aiEnabled()) {
+                      <button class="menu-item ai" (click)="toggleRoomAI()">✦ Añadir IA</button>
+                    } @else {
+                      <span class="menu-item ai-on">✦ IA activa</span>
+                    }
+                  }
+                  @if (room.type === 'dm' && !room.id.startsWith('ai__')) {
+                    <button class="menu-item ai" [class.ai-on]="aiEnabled()" (click)="toggleRoomAI()">
+                      {{ aiEnabled() ? '✦ Desactivar IA' : '✦ Activar IA' }}
+                    </button>
+                  }
+                  @if (room.id.startsWith('ai__')) {
+                    <span class="menu-item ai-on">✦ Inteligente IA</span>
+                  }
+                  <button class="menu-item leave" (click)="deleteCurrentChat()">🗑 Eliminar chat</button>
+                </div>
+              }
+            </div>
           }
 
-          <button class="group-action leave" (click)="deleteCurrentChat()">
-            Eliminar chat
-          </button>
-
-          <span class="status" [class]="chatService.status()">
-            {{ chatService.status() }}
-          </span>
         </div>
       </header>
 
@@ -233,7 +265,7 @@
         </div>
       }
 
-      <div class="messages">
+      <div class="messages" #messagesContainer>
 
         @for (msg of messages(); track msg.cid) {
           <div class="message" [class.mine]="msg.senderUid === authService.user()?.uid">

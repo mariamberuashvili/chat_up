@@ -4,7 +4,7 @@ import json
 
 from fastapi import APIRouter
 
-from models import AddMembersReq, DeleteRoomReq, DmReq, GroupReq, LeaveGroupReq
+from models import AddMembersReq, AiRoomReq, DeleteRoomReq, DmReq, GroupReq, LeaveGroupReq
 from services import rooms as rooms_service
 from ws_manager import manager
 
@@ -34,6 +34,19 @@ def add_members(req: AddMembersReq):
 @router.post("/rooms/group/leave")
 def leave_group(req: LeaveGroupReq):
     return rooms_service.leave_group(req.roomId, req.uid)
+
+
+@router.post("/rooms/ai")
+def open_ai_room(req: AiRoomReq):
+    """Crea (o devuelve) el chat privado del usuario con la IA."""
+    return rooms_service.create_ai_room(req.uid)
+
+
+@router.post("/rooms/{room_id}/ai-toggle")
+def ai_toggle(room_id: str):
+    """Activa o desactiva la IA en una sala existente."""
+    enabled = rooms_service.toggle_ai(room_id)
+    return {"aiEnabled": enabled}
 
 
 @router.post("/rooms/delete")

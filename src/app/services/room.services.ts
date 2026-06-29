@@ -16,6 +16,7 @@ export interface Room {
   members: string[];
   lastMessage?: string;
   lastMessageAt?: number;
+  aiEnabled?: boolean;
 }
 
 export interface ChatMessage {
@@ -106,6 +107,16 @@ export class RoomService {
   // Carga el historial de mensajes de un room (orden cronológico).
   loadMessages(roomId: string): Promise<ChatMessage[]> {
     return this.get(`/rooms/${encodeURIComponent(roomId)}/messages`);
+  }
+
+  // Abre (o reutiliza) el chat personal con la IA.
+  openAiChat(uid: string): Promise<Room> {
+    return this.post('/rooms/ai', { uid });
+  }
+
+  // Activa o desactiva la IA en una sala. Devuelve { aiEnabled: boolean }.
+  toggleRoomAI(roomId: string): Promise<{ aiEnabled: boolean }> {
+    return this.post(`/rooms/${encodeURIComponent(roomId)}/ai-toggle`, {});
   }
 
   // --- Helpers HTTP ---
