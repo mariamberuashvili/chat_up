@@ -80,7 +80,7 @@
                 {{ c.displayName }}
               </label>
             }
-            <button class="create-btn" (click)="createGroup()" [disabled]="!newGroupName?.trim()">Crear grupo</button>
+            <button class="create-btn" (click)="createGroup()" [disabled]="!newGroupName.trim()">Crear grupo</button>
           </div>
         }
 
@@ -125,7 +125,7 @@
         @if (showAddUser()) {
           <div class="new-group">
             <input type="text" placeholder="Correo del usuario" [(ngModel)]="addUserEmail" (keyup.enter)="addUser()" />
-            <button class="create-btn" (click)="addUser()" [disabled]="!addUserEmail?.trim()">Añadir y chatear</button>
+            <button class="create-btn" (click)="addUser()" [disabled]="!addUserEmail.trim()">Añadir y chatear</button>
             @if (addUserMsg()) { <p class="hint">{{ addUserMsg() }}</p> }
           </div>
         }
@@ -136,7 +136,7 @@
               @if (roomService.photoSrc(c.photoUrl); as photo) {
                 <img class="avatar-img" [src]="photo" alt="" />
               } @else {
-                {{ c.displayName?.charAt(0)?.toUpperCase() }}
+                {{ c.displayName.charAt(0).toUpperCase() }}
               }
               <span class="dot" [class.online]="c.online"></span>
             </span>
