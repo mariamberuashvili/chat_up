@@ -1,29 +1,16 @@
-"""RAG: extrae texto de PDFs, genera embeddings y los indexa en Qdrant."""
+"""RAG: extrae texto de PDFs y los indexa con BM25 para búsqueda contextual."""
 
 import asyncio
 import io
-import uuid
 
 import pypdf
-from qdrant_client import QdrantClient
+from rank_bm25 import BM25Okapi
 
-QDRANT_PATH = "./qdrant_storage"
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 100
 
-_client: QdrantClient | None = None
-
-
-def _get_client() -> QdrantClient:
-    global _client
-    if _client is None:
-        _client = QdrantClient(path=QDRANT_PATH)
-    return _client
-
-
-def _col(room_id: str) -> str:
-    """Convierte el room_id en nombre de colección válido para Qdrant."""
-    return "pdf_" + room_id.replace("__", "_").replace("-", "_")
+# Almacén en memoria: room_id -> (índice BM25, lista de chunks)
+_store: dict[str, tuple] = {}
 
 
 def _extract_text(pdf_bytes: bytes) -> str:
@@ -41,60 +28,39 @@ def _chunk(text: str) -> list[str]:
     return chunks
 
 
+def _tokenize(text: str) -> list[str]:
+    return text.lower().split()
+
+
 async def process_pdf(pdf_bytes: bytes, room_id: str) -> int:
-    """Procesa el PDF y guarda los chunks en Qdrant. Devuelve el nº de chunks."""
+    """Extrae texto, divide en chunks y construye el índice BM25 en memoria."""
 
     def _sync() -> int:
-        client = _get_client()
-        col = _col(room_id)
-
-        existing = {c.name for c in client.get_collections().collections}
-        if col in existing:
-            client.delete_collection(col)
-
         text = _extract_text(pdf_bytes)
         chunks = _chunk(text)
         if not chunks:
             return 0
-
-        client.add(
-            collection_name=col,
-            documents=chunks,
-            ids=[str(uuid.uuid4()) for _ in chunks],
-        )
+        bm25 = BM25Okapi([_tokenize(c) for c in chunks])
+        _store[room_id] = (bm25, chunks)
         return len(chunks)
 
     return await asyncio.to_thread(_sync)
 
 
 async def search(query: str, room_id: str, top_k: int = 5) -> list[str]:
-    """Busca los chunks más relevantes para la pregunta del usuario."""
+    """Devuelve los chunks más relevantes para la pregunta (BM25)."""
+    if room_id not in _store:
+        return []
 
     def _sync() -> list[str]:
-        client = _get_client()
-        col = _col(room_id)
-        existing = {c.name for c in client.get_collections().collections}
-        if col not in existing:
-            return []
-        results = client.query(collection_name=col, query_text=query, limit=top_k)
-        texts = []
-        for r in results:
-            doc = r.payload.get("document") if r.payload else None
-            if doc:
-                texts.append(doc)
-        return texts
+        bm25, chunks = _store[room_id]
+        scores = bm25.get_scores(_tokenize(query))
+        ranked = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+        return [chunks[i] for i in ranked[:top_k] if scores[i] > 0]
 
     return await asyncio.to_thread(_sync)
 
 
 def has_pdf(room_id: str) -> bool:
-    """Comprueba si hay un PDF indexado para esta sala."""
-    try:
-        client = _get_client()
-        col = _col(room_id)
-        existing = {c.name for c in client.get_collections().collections}
-        if col not in existing:
-            return False
-        return client.count(collection_name=col).count > 0
-    except Exception:
-        return False
+    """True si hay un PDF indexado para esta sala en la sesión actual."""
+    return room_id in _store

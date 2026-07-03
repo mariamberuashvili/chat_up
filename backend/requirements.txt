@@ -5,4 +5,5 @@ python-dotenv
 python-multipart
 groq
 pypdf
-qdrant-client[fastembed]
+rank-bm25
+numpy
