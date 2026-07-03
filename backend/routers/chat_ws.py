@@ -61,7 +61,7 @@ async def chat_ws(ws: WebSocket, uid: str = ""):
             ):
                 try:
                     room_id = msg["roomId"]
-                    chunks = await rag_service.search(msg.get("text", ""), room_id) if rag_service.has_pdf(room_id) else []
+                    chunks = await rag_service.search(msg.get("text", ""), room_id) if await rag_service.has_pdf(room_id) else []
                     if chunks:
                         # Hay PDF(s) y el mensaje coincide con contenido suyo: responde con RAG.
                         ai_text = await ai_service.respond_rag(msg.get("text", ""), chunks)

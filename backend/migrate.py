@@ -17,6 +17,16 @@ cur = conn.cursor()
 steps = [
     ("ai_enabled column", "ALTER TABLE rooms ADD COLUMN ai_enabled TINYINT(1) NOT NULL DEFAULT 0"),
     ("ai-bot user", "INSERT IGNORE INTO users (uid, email, display_name, online) VALUES ('ai-bot', 'ai@kaia.app', 'Inteligente IA', 0)"),
+    ("tabla pdf_docs", """
+        CREATE TABLE IF NOT EXISTS pdf_docs (
+          id VARCHAR(32) PRIMARY KEY,
+          room_id VARCHAR(255) NOT NULL,
+          filename VARCHAR(255) NOT NULL,
+          chunks LONGTEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_pdf_docs_room (room_id)
+        )
+    """),
 ]
 
 for label, sql in steps:
