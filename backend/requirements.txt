@@ -4,3 +4,5 @@ mysql-connector-python
 python-dotenv
 python-multipart
 groq
+pypdf
+qdrant-client[fastembed]

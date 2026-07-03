@@ -726,3 +726,54 @@
   padding: 0 6px;
   vertical-align: middle;
 }
+
+/* ── PDF upload bar ─────────────────────────────────────────────── */
+
+.pdf-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 28px;
+  border-top: 1px solid var(--border);
+  background: #faf7ff;
+}
+
+.pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  background: rgba(114, 9, 183, 0.1);
+  border: 2px solid rgba(114, 9, 183, 0.25);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #7209b7;
+  transition: background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+
+.pdf-btn:hover {
+  background: rgba(114, 9, 183, 0.18);
+  border-color: rgba(114, 9, 183, 0.5);
+}
+
+.pdf-btn.pdf-loading {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.pdf-status {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #06d6a0;
+}
+
+.pdf-status.pdf-error {
+  color: #ef476f;
+}
+
+@media (max-width: 768px) {
+  .pdf-bar { padding: 7px 14px; }
+}

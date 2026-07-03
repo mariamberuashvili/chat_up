@@ -119,6 +119,18 @@ export class RoomService {
     return this.post(`/rooms/${encodeURIComponent(roomId)}/ai-toggle`, {});
   }
 
+  // Sube un PDF al chat de IA y lo indexa para RAG.
+  async uploadPdf(roomId: string, file: File): Promise<{ ok: boolean; chunks: number; filename: string }> {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch(`${API_BASE}/rooms/${encodeURIComponent(roomId)}/pdf`, {
+      method: 'POST',
+      body: form,
+    });
+    if (!res.ok) throw new Error(`POST pdf -> ${res.status}`);
+    return res.json();
+  }
+
   // --- Helpers HTTP ---
 
   private async get(path: string): Promise<any> {

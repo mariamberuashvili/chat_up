@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from config import CORS_ORIGINS, UPLOAD_DIR
-from routers import chat_ws, messages, rooms, users
+from routers import chat_ws, messages, pdf, rooms, users
 
 app = FastAPI(title="Chat backend")
 
@@ -33,4 +33,5 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 app.include_router(users.router)
 app.include_router(rooms.router)
 app.include_router(messages.router)
+app.include_router(pdf.router)
 app.include_router(chat_ws.router)

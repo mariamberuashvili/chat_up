@@ -43,6 +43,9 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   showMobileMenu  = signal(false);
   isMobile        = signal(window.innerWidth <= 768);
 
+  pdfUploading = signal(false);
+  pdfStatus    = signal<string | null>(null);
+
   @HostListener('window:resize')
   onResize() { this.isMobile.set(window.innerWidth <= 768); }
 
@@ -160,6 +163,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   async selectRoom(room: Room) {
     this.selectedRoom.set(room);
     this.aiEnabled.set(room.aiEnabled ?? false);
+    this.pdfStatus.set(null);
     this.seenCids.clear();
     this.unread.update(u => ({ ...u, [room.id]: 0 }));
 
@@ -254,6 +258,28 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     this.selectedRoom.set(null);
     this.messages.set([]);
     await this.refresh();
+  }
+
+  // ─── PDF / RAG ────────────────────────────────────────────────────────────
+
+  async uploadPdf(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const room = this.selectedRoom();
+    if (!room) return;
+
+    this.pdfUploading.set(true);
+    this.pdfStatus.set(null);
+    try {
+      const result = await this.roomService.uploadPdf(room.id, file);
+      this.pdfStatus.set(`✓ ${result.filename} · ${result.chunks} fragmentos indexados`);
+    } catch {
+      this.pdfStatus.set('✗ Error al procesar el PDF. Inténtalo de nuevo.');
+    } finally {
+      this.pdfUploading.set(false);
+      input.value = '';
+    }
   }
 
   // ─── IA ───────────────────────────────────────────────────────────────────

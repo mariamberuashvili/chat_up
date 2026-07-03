@@ -7,6 +7,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from services import ai as ai_service
 from services import messages as messages_service
+from services import rag as rag_service
 from services import unread
 from services import rooms as rooms_service
 from services import users as users_service
@@ -59,18 +60,23 @@ async def chat_ws(ws: WebSocket, uid: str = ""):
                 and rooms_service.is_ai_enabled(msg["roomId"])
             ):
                 try:
-                    history  = messages_service.history(msg["roomId"])
-                    ai_text  = await ai_service.respond(history)
+                    room_id = msg["roomId"]
+                    if rag_service.has_pdf(room_id):
+                        chunks  = await rag_service.search(msg.get("text", ""), room_id)
+                        ai_text = await ai_service.respond_rag(msg.get("text", ""), chunks)
+                    else:
+                        history = messages_service.history(room_id)
+                        ai_text = await ai_service.respond(history)
                     ai_msg   = {
                         "cid":        str(uuid.uuid4()),
-                        "roomId":     msg["roomId"],
+                        "roomId":     room_id,
                         "text":       ai_text,
                         "senderUid":  ai_service.AI_UID,
                         "senderName": ai_service.AI_NAME,
                     }
                     messages_service.save(ai_msg)
                     ai_payload = json.dumps(ai_msg)
-                    for sock in manager.sockets_for(rooms_service.member_uids(msg["roomId"])):
+                    for sock in manager.sockets_for(rooms_service.member_uids(room_id)):
                         try:
                             await sock.send_text(ai_payload)
                         except Exception:

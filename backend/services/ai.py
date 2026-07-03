@@ -17,6 +17,13 @@ _SYSTEM = (
     "No digas que eres una IA a menos que te lo pregunten explícitamente."
 )
 
+_RAG_SYSTEM = (
+    "Eres un asistente que responde EXCLUSIVAMENTE con información del documento que se te proporciona. "
+    "Si la información solicitada no está en el documento, responde exactamente: "
+    "'No encuentro esa información en el PDF.' "
+    "No uses conocimiento externo. No inventes ni completes información."
+)
+
 
 def _build_messages(history: list[dict]) -> list[dict]:
     messages = [{"role": "system", "content": _SYSTEM}]
@@ -47,6 +54,37 @@ async def respond(history: list[dict]) -> str:
             return text.strip() if text else "No pude generar respuesta."
         except Exception as e:
             print("❌ Error Groq:", str(e))
+            return "Error al generar respuesta."
+
+    return await asyncio.to_thread(_call)
+
+
+async def respond_rag(query: str, chunks: list[str]) -> str:
+    """Responde usando SOLO los fragmentos del PDF recuperados por Qdrant."""
+    if not chunks:
+        return "No encuentro esa información en el PDF."
+
+    context = "\n\n---\n\n".join(chunks)
+    messages = [
+        {
+            "role": "system",
+            "content": f"{_RAG_SYSTEM}\n\nDOCUMENTO:\n{context}",
+        },
+        {"role": "user", "content": query},
+    ]
+
+    def _call() -> str:
+        try:
+            completion = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=messages,
+                max_tokens=512,
+                temperature=0.1,
+            )
+            text = completion.choices[0].message.content
+            return text.strip() if text else "No encuentro esa información en el PDF."
+        except Exception as e:
+            print("❌ Error Groq RAG:", str(e))
             return "Error al generar respuesta."
 
     return await asyncio.to_thread(_call)
