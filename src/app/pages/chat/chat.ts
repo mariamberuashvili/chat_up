@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ChatService } from '../../services/chat.services';
 import { AuthService } from '../../services/auth.services';
-import { RoomService, AppUser, Room, ChatMessage } from '../../services/room.services';
+import { RoomService, AppUser, Room, ChatMessage, PdfInfo } from '../../services/room.services';
 
 @Component({
   selector: 'app-chat',
@@ -164,6 +164,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     this.selectedRoom.set(room);
     this.aiEnabled.set(room.aiEnabled ?? false);
     this.pdfStatus.set(null);
+    this.pdfList.set([]);
     this.seenCids.clear();
     this.unread.update(u => ({ ...u, [room.id]: 0 }));
 
@@ -171,6 +172,10 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     history.forEach(m => this.seenCids.add(m.cid));
     this.messages.set(history);
     this.shouldScrollToBottom = true;
+
+    if (room.id.startsWith('ai__')) {
+      await this.loadPdfs(room.id);
+    }
   }
 
   async deleteCurrentChat() {
@@ -262,23 +267,52 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
 
   // ─── PDF / RAG ────────────────────────────────────────────────────────────
 
+  pdfList = signal<PdfInfo[]>([]);
+
+  async loadPdfs(roomId: string) {
+    try {
+      const { pdfs } = await this.roomService.listPdfs(roomId);
+      this.pdfList.set(pdfs);
+    } catch {
+      this.pdfList.set([]);
+    }
+  }
+
   async uploadPdf(event: Event) {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
+    const files = Array.from(input.files ?? []);
+    if (!files.length) return;
     const room = this.selectedRoom();
     if (!room) return;
 
     this.pdfUploading.set(true);
     this.pdfStatus.set(null);
     try {
-      const result = await this.roomService.uploadPdf(room.id, file);
-      this.pdfStatus.set(`✓ ${result.filename} · ${result.chunks} fragmentos indexados`);
-    } catch (e: any) {
-      this.pdfStatus.set(`✗ ${e?.message ?? 'Error al procesar el PDF'}`);
+      for (const file of files) {
+        try {
+          const result = await this.roomService.uploadPdf(room.id, file);
+          this.pdfStatus.set(`✓ ${result.filename} · ${result.chunks} fragmentos · PDF ${result.totalPdfs}/${result.maxPdfs}`);
+        } catch (e: any) {
+          this.pdfStatus.set(`✗ ${file.name}: ${e?.message ?? 'Error al procesar el PDF'}`);
+          break; // Si uno falla (ej. límite alcanzado), no sigue con el resto.
+        }
+      }
     } finally {
       this.pdfUploading.set(false);
       input.value = '';
+      await this.loadPdfs(room.id);
+    }
+  }
+
+  async deletePdf(docId: string) {
+    const room = this.selectedRoom();
+    if (!room) return;
+    try {
+      const { pdfs } = await this.roomService.deletePdf(room.id, docId);
+      this.pdfList.set(pdfs);
+      this.pdfStatus.set(null);
+    } catch (e: any) {
+      this.pdfStatus.set(`✗ ${e?.message ?? 'No se pudo borrar el PDF'}`);
     }
   }
 

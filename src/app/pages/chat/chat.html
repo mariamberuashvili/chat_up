@@ -284,15 +284,26 @@
 
       @if (selectedRoom()?.id?.startsWith('ai__')) {
         <div class="pdf-bar">
-          <label class="pdf-btn" [class.pdf-loading]="pdfUploading()" [title]="pdfUploading() ? 'Procesando...' : 'Subir PDF'">
+          <label class="pdf-btn" [class.pdf-loading]="pdfUploading()" [title]="pdfUploading() ? 'Procesando...' : 'Subir hasta 3 PDFs'">
             {{ pdfUploading() ? '⏳' : '📄' }}
-            <span>{{ pdfUploading() ? 'Procesando PDF…' : 'Subir PDF' }}</span>
-            <input type="file" accept=".pdf" (change)="uploadPdf($event)" [disabled]="pdfUploading()" hidden />
+            <span>{{ pdfUploading() ? 'Procesando PDF…' : 'Subir PDF (máx. 3)' }}</span>
+            <input type="file" accept=".pdf" multiple (change)="uploadPdf($event)" [disabled]="pdfUploading()" hidden />
           </label>
           @if (pdfStatus()) {
             <span class="pdf-status" [class.pdf-error]="pdfStatus()!.startsWith('✗')">{{ pdfStatus() }}</span>
           }
         </div>
+
+        @if (pdfList().length) {
+          <ul class="pdf-list">
+            @for (pdf of pdfList(); track pdf.id; let i = $index) {
+              <li class="pdf-list-item">
+                <span>{{ i + 1 }}. {{ pdf.filename }}</span>
+                <button type="button" class="pdf-remove" title="Borrar PDF" (click)="deletePdf(pdf.id)">✕</button>
+              </li>
+            }
+          </ul>
+        }
       }
 
       <div class="input-container">

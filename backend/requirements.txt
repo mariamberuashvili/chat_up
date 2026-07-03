@@ -4,6 +4,6 @@ mysql-connector-python
 python-dotenv
 python-multipart
 groq
-pypdf
+pymupdf
 rank-bm25
 numpy

@@ -18,8 +18,10 @@ _SYSTEM = (
 )
 
 _RAG_SYSTEM = (
-    "Eres un asistente que responde EXCLUSIVAMENTE con información del documento que se te proporciona. "
-    "Si la información solicitada no está en el documento, responde exactamente: "
+    "Eres un asistente que responde EXCLUSIVAMENTE con información de los documentos que se te proporcionan. "
+    "Puede haber varios documentos: usa información de todos los que sean relevantes para la pregunta, "
+    "no solo del primero o el último. Indica de qué documento sale cada dato si la pregunta compara varios. "
+    "Si la información solicitada no está en ningún documento, responde exactamente: "
     "'No encuentro esa información en el PDF.' "
     "No uses conocimiento externo. No inventes ni completes información."
 )
@@ -59,12 +61,12 @@ async def respond(history: list[dict]) -> str:
     return await asyncio.to_thread(_call)
 
 
-async def respond_rag(query: str, chunks: list[str]) -> str:
-    """Responde usando SOLO los fragmentos del PDF recuperados por Qdrant."""
+async def respond_rag(query: str, chunks: list[tuple[str, str]]) -> str:
+    """Responde usando SOLO los fragmentos recuperados (por BM25) de los PDFs subidos."""
     if not chunks:
         return "No encuentro esa información en el PDF."
 
-    context = "\n\n---\n\n".join(chunks)
+    context = "\n\n---\n\n".join(f"[Documento: {filename}]\n{text}" for filename, text in chunks)
     messages = [
         {
             "role": "system",

@@ -9,6 +9,11 @@ export interface AppUser {
   online: boolean;
 }
 
+export interface PdfInfo {
+  id: string;
+  filename: string;
+}
+
 export interface Room {
   id: string;
   type: 'dm' | 'group';
@@ -119,13 +124,31 @@ export class RoomService {
     return this.post(`/rooms/${encodeURIComponent(roomId)}/ai-toggle`, {});
   }
 
-  // Sube un PDF al chat de IA y lo indexa para RAG.
-  async uploadPdf(roomId: string, file: File): Promise<{ ok: boolean; chunks: number; filename: string }> {
+  // Sube un PDF al chat de IA y lo indexa para RAG (hasta 3 PDFs por chat).
+  async uploadPdf(roomId: string, file: File): Promise<{ ok: boolean; chunks: number; filename: string; totalPdfs: number; maxPdfs: number }> {
     const form = new FormData();
     form.append('file', file);
     const res = await fetch(`${API_BASE}/rooms/${encodeURIComponent(roomId)}/pdf`, {
       method: 'POST',
       body: form,
+    });
+    if (!res.ok) {
+      let detail = `Error ${res.status}`;
+      try { detail = (await res.json()).detail ?? detail; } catch {}
+      throw new Error(detail);
+    }
+    return res.json();
+  }
+
+  // Lista los PDFs subidos en un chat de IA.
+  listPdfs(roomId: string): Promise<{ pdfs: PdfInfo[]; maxPdfs: number }> {
+    return this.get(`/rooms/${encodeURIComponent(roomId)}/pdf`);
+  }
+
+  // Borra un PDF del chat de IA por su id.
+  async deletePdf(roomId: string, docId: string): Promise<{ ok: boolean; pdfs: PdfInfo[] }> {
+    const res = await fetch(`${API_BASE}/rooms/${encodeURIComponent(roomId)}/pdf/${encodeURIComponent(docId)}`, {
+      method: 'DELETE',
     });
     if (!res.ok) {
       let detail = `Error ${res.status}`;

@@ -774,6 +774,54 @@
   color: #ef476f;
 }
 
+.pdf-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 28px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid var(--border);
+  background: #faf7ff;
+}
+
+.pdf-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: #444;
+}
+
+.pdf-list-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-remove {
+  flex-shrink: 0;
+  border: none;
+  background: rgba(239, 71, 111, 0.12);
+  color: #ef476f;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.pdf-remove:hover {
+  background: rgba(239, 71, 111, 0.25);
+}
+
 @media (max-width: 768px) {
   .pdf-bar { padding: 7px 14px; }
+  .pdf-list { padding: 6px 14px 10px; }
 }
