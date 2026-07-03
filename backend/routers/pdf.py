@@ -21,7 +21,9 @@ async def upload_pdf(room_id: str, file: UploadFile = File(...)):
     try:
         chunks = await rag_service.process_pdf(pdf_bytes, room_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error procesando PDF: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error procesando PDF: {type(e).__name__}: {e}")
 
     if chunks == 0:
         raise HTTPException(status_code=422, detail="No se pudo extraer texto del PDF.")

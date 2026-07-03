@@ -274,8 +274,8 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     try {
       const result = await this.roomService.uploadPdf(room.id, file);
       this.pdfStatus.set(`✓ ${result.filename} · ${result.chunks} fragmentos indexados`);
-    } catch {
-      this.pdfStatus.set('✗ Error al procesar el PDF. Inténtalo de nuevo.');
+    } catch (e: any) {
+      this.pdfStatus.set(`✗ ${e?.message ?? 'Error al procesar el PDF'}`);
     } finally {
       this.pdfUploading.set(false);
       input.value = '';

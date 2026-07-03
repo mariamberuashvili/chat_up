@@ -127,7 +127,11 @@ export class RoomService {
       method: 'POST',
       body: form,
     });
-    if (!res.ok) throw new Error(`POST pdf -> ${res.status}`);
+    if (!res.ok) {
+      let detail = `Error ${res.status}`;
+      try { detail = (await res.json()).detail ?? detail; } catch {}
+      throw new Error(detail);
+    }
     return res.json();
   }
 
