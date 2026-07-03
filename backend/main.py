@@ -1,13 +1,16 @@
 
 import os
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from config import CORS_ORIGINS, UPLOAD_DIR
 from routers import chat_ws, messages, pdf, rooms, users
+
+ANGULAR_DIR = Path(__file__).parent.parent / "dist" / "WebSocket" / "browser"
 
 app = FastAPI(title="Chat backend")
 
@@ -35,3 +38,13 @@ app.include_router(rooms.router)
 app.include_router(messages.router)
 app.include_router(pdf.router)
 app.include_router(chat_ws.router)
+
+# Sirve el frontend Angular para cualquier ruta desconocida (SPA fallback).
+# Esto permite que al refrescar /chat, /login, etc. Angular tome el control.
+if ANGULAR_DIR.exists():
+    @app.get("/{full_path:path}")
+    async def serve_angular(full_path: str):
+        file = ANGULAR_DIR / full_path
+        if file.is_file():
+            return FileResponse(file)
+        return FileResponse(ANGULAR_DIR / "index.html")
