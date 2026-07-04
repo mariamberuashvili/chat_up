@@ -1,4 +1,4 @@
-import { AfterViewChecked, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, WritableSignal, computed, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, WritableSignal, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -13,10 +13,9 @@ import { RoomService, AppUser, Room, ChatMessage, PdfInfo } from '../../services
   templateUrl: './chat.html',
   styleUrl: './chat.css',
 })
-export class Chat implements OnInit, OnDestroy, AfterViewChecked {
+export class Chat implements OnInit, OnDestroy {
 
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef<HTMLDivElement>;
-  private shouldScrollToBottom = false;
 
   message = '';
 
@@ -60,14 +59,11 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     private   router: Router,
   ) {}
 
-  ngAfterViewChecked() {
-    if (this.shouldScrollToBottom) {
-      this.shouldScrollToBottom = false;
-      try {
-        const el = this.messagesContainer?.nativeElement;
-        if (el) el.scrollTop = el.scrollHeight;
-      } catch {}
-    }
+  private scrollToBottom() {
+    requestAnimationFrame(() => {
+      const el = this.messagesContainer?.nativeElement;
+      if (el) el.scrollTop = el.scrollHeight;
+    });
   }
 
   ngOnInit() {
@@ -141,7 +137,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     // Mensaje normal en la sala activa
     this.messages.update(list => [...list, msg]);
     this.unread.update(u => ({ ...u, [msg.roomId]: 0 }));
-    this.shouldScrollToBottom = true;
+    this.scrollToBottom();
 
     // Notificar si la pestaña no tiene foco
     if (!document.hasFocus()) {
@@ -171,7 +167,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     const history = await this.roomService.loadMessages(room.id);
     history.forEach(m => this.seenCids.add(m.cid));
     this.messages.set(history);
-    this.shouldScrollToBottom = true;
+    this.scrollToBottom();
 
     if (room.id.startsWith('ai__')) {
       await this.loadPdfs(room.id);
@@ -212,7 +208,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     this.seenCids.add(msg.cid);
     this.messages.update(list => [...list, msg]);
     this.message = '';
-    this.shouldScrollToBottom = true;
+    this.scrollToBottom();
     this.chatService.send(msg);
   }
 
