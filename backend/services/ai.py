@@ -62,8 +62,7 @@ async def respond(history: list[dict]) -> str:
 
 
 async def respond_rag(query: str, chunks: list[tuple[str, str]]) -> str:
-    """Responde usando SOLO los fragmentos recuperados (búsqueda semántica) de los PDFs
-    subidos, y agrega al final qué documentos se usaron como fuente."""
+    """Responde usando SOLO los fragmentos recuperados (por BM25) de los PDFs subidos."""
     if not chunks:
         return "No encuentro esa información en el PDF."
 
@@ -76,9 +75,6 @@ async def respond_rag(query: str, chunks: list[tuple[str, str]]) -> str:
         {"role": "user", "content": query},
     ]
 
-    # Fuentes realmente usadas para armar el contexto, en el orden en que fueron recuperadas.
-    sources = list(dict.fromkeys(filename for filename, _ in chunks))
-
     def _call() -> str:
         try:
             completion = client.chat.completions.create(
@@ -88,13 +84,9 @@ async def respond_rag(query: str, chunks: list[tuple[str, str]]) -> str:
                 temperature=0.1,
             )
             text = completion.choices[0].message.content
-            answer = text.strip() if text else "No encuentro esa información en el PDF."
+            return text.strip() if text else "No encuentro esa información en el PDF."
         except Exception as e:
             print("❌ Error Groq RAG:", str(e))
             return "Error al generar respuesta."
-
-        if answer == "No encuentro esa información en el PDF.":
-            return answer
-        return f"{answer}\n\nFuentes: {', '.join(sources)}"
 
     return await asyncio.to_thread(_call)

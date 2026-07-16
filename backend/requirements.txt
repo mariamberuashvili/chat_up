@@ -5,5 +5,5 @@ python-dotenv
 python-multipart
 groq
 pymupdf
-fastembed
+rank-bm25
 numpy
