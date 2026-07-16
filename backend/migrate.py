@@ -27,6 +27,10 @@ steps = [
           INDEX idx_pdf_docs_room (room_id)
         )
     """),
+    (
+        "columna embeddings en pdf_docs",
+        "ALTER TABLE pdf_docs ADD COLUMN embeddings LONGTEXT NULL",
+    ),
 ]
 
 for label, sql in steps:
